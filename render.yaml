@@ -1,0 +1,19 @@
+services:
+  # 1. Deploy the Backend Api
+  - type: web
+    name: energyiq-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+  # 2. Deploy the Frontend UI
+  - type: web
+    name: energyiq-frontend
+    env: node
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
