@@ -1,0 +1,61 @@
+{
+  "inputs": {
+    "location": {
+      "latitude": -1.2921,
+      "longitude": 36.8219,
+      "elevation": 1680.0
+    },
+    "meteo_data": {
+      "radiation_db": "PVGIS-SARAH2",
+      "meteo_db": "ERA5",
+      "year_min": 2005,
+      "year_max": 2020
+    },
+    "mounting_system": {
+      "fixed": {
+        "slope": { "value": 10, "optimal": false },
+        "azimuth": { "value": 180, "optimal": false },
+        "type": "free-standing"
+      }
+    },
+    "pv_module": {
+      "technology": "c-Si",
+      "peak_power": 1.0,
+      "system_loss": 14.0
+    }
+  },
+  "outputs": {
+    "totals": {
+      "fixed": {
+        "E_d": 4.44,
+        "E_m": 135.0,
+        "E_y": 1620.0,
+        "H(i)_d": 5.30,
+        "H(i)_m": 161.2,
+        "H(i)_y": 1934.5,
+        "SD_m": 12.5,
+        "SD_y": 45.0,
+        "l_aoi": -2.8,
+        "l_spec": 1.5,
+        "l_tg": -6.2,
+        "l_total": -20.5
+      }
+    },
+    "monthly": {
+      "fixed": [
+        { "month": 1, "E_d": 4.84, "E_m": 150.0, "H(i)_d": 5.8, "H(i)_m": 179.8, "SD_m": 10.1 },
+        { "month": 2, "E_d": 4.82, "E_m": 135.0, "H(i)_d": 5.7, "H(i)_m": 160.2, "SD_m": 9.8 },
+        { "month": 3, "E_d": 4.68, "E_m": 145.0, "H(i)_d": 5.5, "H(i)_m": 170.5, "SD_m": 11.2 },
+        { "month": 4, "E_d": 3.83, "E_m": 115.0, "H(i)_d": 4.5, "H(i)_m": 135.0, "SD_m": 14.0 },
+        { "month": 5, "E_d": 3.55, "E_m": 110.0, "H(i)_d": 4.2, "H(i)_m": 130.2, "SD_m": 12.8 },
+        { "month": 6, "E_d": 3.83, "E_m": 115.0, "H(i)_d": 4.4, "H(i)_m": 132.0, "SD_m": 11.5 },
+        { "month": 7, "E_d": 4.03, "E_m": 125.0, "H(i)_d": 4.6, "H(i)_m": 142.6, "SD_m": 10.9 },
+        { "month": 8, "E_d": 4.35, "E_m": 135.0, "H(i)_d": 5.0, "H(i)_m": 155.0, "SD_m": 11.8 },
+        { "month": 9, "E_d": 4.83, "E_m": 145.0, "H(i)_d": 5.6, "H(i)_m": 168.0, "SD_m": 10.2 },
+        { "month": 10, "E_d": 4.68, "E_m": 145.0, "H(i)_d": 5.4, "H(i)_m": 167.4, "SD_m": 11.6 },
+        { "month": 11, "E_d": 4.00, "E_m": 120.0, "H(i)_d": 4.7, "H(i)_m": 141.0, "SD_m": 13.5 },
+        { "month": 12, "E_d": 4.68, "E_m": 145.0, "H(i)_d": 5.5, "H(i)_m": 170.5, "SD_m": 10.7 }
+      ]
+    }
+  }
+}

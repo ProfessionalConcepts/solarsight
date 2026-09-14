@@ -1,0 +1,34 @@
+{
+  "name": "energyiq-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "typescript": "^5.4.0",
+    "tailwindcss": "^3.4.0",
+    "@tailwindcss/forms": "^0.5.7",
+    "next-intl": "^3.15.0",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1",
+    "@types/leaflet": "^1.9.12",
+    "recharts": "^2.12.0",
+    "@turf/turf": "^6.5.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@types/node": "^20.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.2.0"
+  }
+}
