@@ -14,10 +14,10 @@ The frontend and backend deploy as separate services:
    ```text
    Install command: npm install
    Build command: npm run build
-   Output directory: default
+   Output directory: `.next`
    ```
 
-   If Vercel shows custom commands under **Settings → Build and Deployment**, clear them or set them exactly to `npm install` and `npm run build`. Do not use `--prefix frontend` when the Root Directory is already `frontend`.
+   If Vercel shows custom settings under **Settings → Build and Deployment**, set them exactly to `npm install`, `npm run build`, and `.next`. Do not use `--prefix frontend` when the Root Directory is already `frontend`.
 
 4. Add this environment variable in the Vercel project settings:
 
