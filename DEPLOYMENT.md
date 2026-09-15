@@ -8,16 +8,24 @@ The frontend and backend deploy as separate services:
 ## Vercel frontend
 
 1. Push the repository to GitHub.
-2. In Vercel, import the repository. The root `vercel.json` already defines the build.
-3. Add this environment variable in the Vercel project settings:
+2. In Vercel, import the repository and set **Root Directory** to `frontend`.
+3. Leave the framework as **Next.js** and use the default build settings:
+
+   ```text
+   Install command: npm install
+   Build command: npm run build
+   Output directory: default
+   ```
+
+4. Add this environment variable in the Vercel project settings:
 
    ```text
    NEXT_PUBLIC_API_URL=https://YOUR-RAILWAY-SERVICE.up.railway.app/api
    ```
 
-4. Deploy. Every push to the selected Git branch will create a new deployment.
+5. Deploy. Every push to the selected Git branch will create a new deployment.
 
-The frontend can also be deployed manually from the repository root:
+The frontend can also be built manually from the repository root:
 
 ```bash
 npm install --prefix frontend
