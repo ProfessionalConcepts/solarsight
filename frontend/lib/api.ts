@@ -14,7 +14,7 @@ import type {
   AdminInstaller,
 } from './types'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '/api'
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? '/api').replace(/\/$/, '')
 
 const ORIENTATION_MAP: Record<string, number> = {
   N: 0,

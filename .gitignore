@@ -2,3 +2,11 @@ node_modules/
 frontend/node_modules/
 .next/
 frontend/.next/
+
+# Local secrets and deployment credentials
+.env
+.env.*
+!.env.example
+!.env.production.example
+frontend/.env.local
+backend/.env
