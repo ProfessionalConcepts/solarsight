@@ -11,5 +11,7 @@ export const config = {
   // - /_vercel (Vercel internals)
   // - /.*\..* (static files)
   matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
-  runtime: 'experimental-edge', // or 'edge'
 }
+
+// Export the runtime setting outside of the config matcher object
+export const runtime = 'edge'
