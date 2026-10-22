@@ -192,3 +192,47 @@ export async function adminUpdateConfig(token: string, updates: Record<string, a
     body: JSON.stringify({ updates }),
   })
 }
+
+// ─── Privacy & Redaction ───────────────────────────────────────────────────
+
+export async function redactAssessment(
+  id: string
+): Promise<{ success: boolean; message: string; report: AssessmentReport }> {
+  return apiFetch(`/assessments/${id}/redact`, {
+    method: 'POST',
+  })
+}
+
+// ─── Installer Portal Client ───────────────────────────────────────────────
+
+export async function getInstallerProfile(id: number): Promise<AdminInstaller> {
+  return apiFetch(`/installers/${id}`)
+}
+
+export async function updateInstallerProfile(
+  id: number,
+  data: Partial<AdminInstaller>
+): Promise<{ success: boolean; installer: AdminInstaller }> {
+  return apiFetch(`/installers/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+}
+
+// ─── Customer Project & Installation Tracker ───────────────────────────────
+
+export async function getProjectTracker(
+  assessmentId: string
+): Promise<{ tracker: any; assessment: AssessmentReport | null }> {
+  return apiFetch(`/project/${assessmentId}`)
+}
+
+export async function updateProjectTracker(
+  assessmentId: string,
+  data: any
+): Promise<{ success: boolean; tracker: any }> {
+  return apiFetch(`/project/${assessmentId}`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
