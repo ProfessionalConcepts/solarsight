@@ -17,13 +17,17 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const assessmentId = params.id
+  const requestedInstallerId = new URL(req.url).searchParams.get('installer')
   let tracker = getProjectTracker(assessmentId)
 
   // If no tracker exists yet, initialize one from the assessment
   if (!tracker) {
     const assessment = getAssessmentById(assessmentId)
     const installers = getInstallers().filter((i) => i.active)
-    const defaultInstaller = installers[0]
+    const requestedInstaller = requestedInstallerId
+      ? installers.find((i) => i.id === Number(requestedInstallerId))
+      : undefined
+    const defaultInstaller = requestedInstaller || installers[0]
 
     if (defaultInstaller) {
       tracker = {
@@ -35,6 +39,14 @@ export async function GET(
         status: 'site_survey_pending',
         created_at: new Date().toISOString(),
       }
+      saveProjectTracker(tracker)
+    }
+  }
+
+  if (tracker && requestedInstallerId) {
+    const requestedInstaller = getInstallerById(Number(requestedInstallerId))
+    if (requestedInstaller?.active && tracker.installer.id !== requestedInstaller.id) {
+      tracker.installer = toPublicDetail(requestedInstaller)
       saveProjectTracker(tracker)
     }
   }

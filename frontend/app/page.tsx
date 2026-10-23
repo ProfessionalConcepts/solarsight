@@ -15,6 +15,15 @@ export default function LandingPage() {
       <HomeHero />
       <div className="max-w-3xl mx-auto px-4 space-y-12">
 
+      <div className="flex justify-end -mb-8">
+        <Link
+          href="/installer"
+          className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2 text-xs font-bold text-textPrimary hover:border-primary hover:text-primary transition-colors"
+        >
+          Installer dashboard <span aria-hidden="true">→</span>
+        </Link>
+      </div>
+
       {/* ── How It Works ── */}
       <ScrollReveal className="-mt-16 relative z-10 sm:-mt-24">
       <section className="bg-surface rounded-3xl p-6 sm:p-8 border border-border shadow-soft space-y-6">

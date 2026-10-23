@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { getProjectTracker, updateProjectTracker, getNearbyInstallers } from '@/lib/api'
 import { formatKsh } from '@/lib/formatters'
-import type { AssessmentReport, CustomerProjectTracker, InstallerPublic } from '@/lib/types'
+import type { AssessmentReport, CustomerProjectTracker, InstallerPublic, InstallerWorkflowStep } from '@/lib/types'
 
 export default function CustomerProjectPage({ params }: { params: { id: string } }) {
   const assessmentId = params.id
@@ -33,7 +33,8 @@ export default function CustomerProjectPage({ params }: { params: { id: string }
     async function load() {
       try {
         setLoading(true)
-        const res = await getProjectTracker(assessmentId)
+        const installerId = Number(new URLSearchParams(window.location.search).get('installer')) || undefined
+        const res = await getProjectTracker(assessmentId, installerId)
         setTracker(res.tracker)
         setAssessment(res.assessment)
 
@@ -117,6 +118,16 @@ export default function CustomerProjectPage({ params }: { params: { id: string }
   const kwp = sizing?.recommended_kwp || 3.0
   const batKwh = sizing?.battery_kwh || 5.0
   const panelCount = Math.ceil((kwp * 1000) / 550)
+  const workflowSteps: InstallerWorkflowStep[] = inst.workflow_steps?.length
+    ? inst.workflow_steps
+    : [
+        { step: 1, title: 'Feasibility review and system sizing', description: 'Review your solar report and confirm the recommended system size.', duration: '24 hours' },
+        { step: 2, title: 'Site visit and roof audit', description: 'Inspect roof structure, electrical equipment, and cable routes.', duration: '1 to 2 days' },
+        { step: 3, title: 'Equipment proposal and quote', description: 'Confirm panels, inverter, battery capacity, warranties, and price.', duration: '24 to 48 hours' },
+        { step: 4, title: 'Permits and installation planning', description: 'Prepare required compliance documents and agree the installation date.', duration: '3 to 5 days' },
+        { step: 5, title: 'Installation and commissioning', description: 'Install the system, test safety and performance, and explain monitoring.', duration: '1 to 2 days' },
+      ]
+  const catalogProducts = inst.products || []
 
   // WhatsApp quick link for the customer to message the installer
   const waLeadText = encodeURIComponent(
@@ -235,6 +246,40 @@ export default function CustomerProjectPage({ params }: { params: { id: string }
           </p>
         </div>
 
+        {inst.workflow_steps?.length ? (
+          <div className="relative border-l-2 border-teal-200 ml-4 pl-6 space-y-6">
+            {workflowSteps.map((step, index) => {
+              const isComplete = index === 0
+              const isCurrent = index === 1
+              return (
+                <div key={`${step.step}-${step.title}`} className="relative">
+                  <div className={`absolute -left-[33px] top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow ${isComplete ? 'bg-emerald-500 text-white' : isCurrent ? 'bg-primary text-white' : 'bg-slate-200 text-slate-600'}`}>
+                    {isComplete ? '✓' : index + 1}
+                  </div>
+                  <div>
+                    <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded ${isComplete ? 'bg-emerald-50 text-emerald-700' : isCurrent ? 'bg-teal-100 text-teal-800' : 'bg-slate-100 text-slate-600'}`}>
+                      {isComplete ? 'Completed' : isCurrent && tracker.scheduled_survey_date ? 'Visit requested' : isCurrent ? 'Current step' : 'Upcoming'}
+                    </span>
+                    <h3 className="font-bold text-sm text-textPrimary mt-1">{index + 1}. {step.title}</h3>
+                    <p className="text-xs text-textSecondary mt-0.5">{step.description}</p>
+                    <p className="text-[11px] font-semibold text-textSecondary mt-1">Typical timing: {step.duration}</p>
+                    {step.required_from_customer && (
+                      <p className="text-[11px] text-amber-800 font-semibold mt-1">Customer preparation: {step.required_from_customer}</p>
+                    )}
+                    {isCurrent && !tracker.scheduled_survey_date && (
+                      <button type="button" onClick={() => setShowScheduleModal(true)} className="mt-2.5 px-4 py-2 bg-accent hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-sm">
+                        Propose your visit date →
+                      </button>
+                    )}
+                    {isCurrent && tracker.scheduled_survey_date && (
+                      <p className="mt-2 text-xs font-bold text-teal-800">Requested: {tracker.scheduled_survey_date}</p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
         <div className="relative border-l-2 border-teal-200 ml-4 pl-6 space-y-6">
           {/* Step 1 */}
           <div className="relative">
@@ -346,6 +391,7 @@ export default function CustomerProjectPage({ params }: { params: { id: string }
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* ── 3. Equipment Sizing & Bill of Materials (BOM) Calculator ── */}
@@ -414,6 +460,28 @@ export default function CustomerProjectPage({ params }: { params: { id: string }
             </p>
           </div>
         </div>
+
+        {catalogProducts.length > 0 && (
+          <div className="space-y-3 border-t border-border pt-5">
+            <div>
+              <h3 className="font-bold text-sm text-textPrimary">Products offered by {inst.name}</h3>
+              <p className="text-xs text-textSecondary mt-1">Confirm final models and quantities with the installer after the site survey.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {catalogProducts.map((product) => (
+                <div key={product.id} className="p-4 bg-background rounded-xl border border-border">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-teal-50 text-teal-800">{product.category}</span>
+                    <span className={`text-[10px] font-bold ${product.in_stock ? 'text-emerald-700' : 'text-amber-800'}`}>{product.in_stock ? 'In stock' : 'Availability to confirm'}</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-textPrimary mt-2">{product.brand} · {product.model}</h4>
+                  <p className="text-xs text-textSecondary mt-1">{product.specs}</p>
+                  <p className="text-[11px] text-textSecondary mt-2">Warranty: {product.warranty_years} years</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {fin && (
           <div className="p-4 bg-teal-50/70 border border-teal-100 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">

@@ -6,6 +6,7 @@ import {
   adminGetInstallers,
   adminGetLeads,
   getInstallerProfile,
+  registerInstallerProfile,
   updateInstallerProfile,
 } from '@/lib/api'
 import type {
@@ -24,6 +25,16 @@ export default function InstallerDashboardPage() {
   const [saving, setSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'profile' | 'products' | 'workflow' | 'leads'>('profile')
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false)
+  const [registration, setRegistration] = useState({
+    name: '',
+    phone: '',
+    county: '',
+    town: '',
+    epra_license_no: '',
+    service_radius_km: 50,
+    bio: '',
+  })
 
   // Product modal
   const [showProductModal, setShowProductModal] = useState(false)
@@ -95,6 +106,49 @@ export default function InstallerDashboardPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  async function handleRegisterCompany(e: React.FormEvent) {
+    e.preventDefault()
+    try {
+      setSaving(true)
+      const res = await registerInstallerProfile(registration)
+      setInstallers((current) => [res.installer, ...current])
+      setSelectedInstallerId(res.installer.id)
+      setInstaller(res.installer)
+      setShowRegistrationModal(false)
+      setSuccessMessage('Company profile submitted. It will appear in customer matches after EPRA review.')
+      setActiveTab('profile')
+    } catch (err: any) {
+      alert(`Registration failed: ${err.message}`)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function updateWorkflowStep(index: number, updates: Partial<InstallerWorkflowStep>) {
+    if (!installer) return
+    const steps = [...(installer.workflow_steps || [])]
+    steps[index] = { ...steps[index], ...updates }
+    setInstaller({ ...installer, workflow_steps: steps })
+  }
+
+  function addWorkflowStep() {
+    if (!installer) return
+    const steps = installer.workflow_steps || []
+    setInstaller({
+      ...installer,
+      workflow_steps: [
+        ...steps,
+        { step: steps.length + 1, title: '', description: '', duration: '', required_from_customer: '' },
+      ],
+    })
+  }
+
+  function removeWorkflowStep(index: number) {
+    if (!installer) return
+    const steps = (installer.workflow_steps || []).filter((_, stepIndex) => stepIndex !== index)
+    setInstaller({ ...installer, workflow_steps: steps.map((step, stepIndex) => ({ ...step, step: stepIndex + 1 })) })
   }
 
   // Add new product
@@ -171,10 +225,22 @@ export default function InstallerDashboardPage() {
           <p className="text-xs sm:text-sm text-textSecondary mt-1">
             Manage your company profile, hardware product line, field visit workflow, and customer dossiers.
           </p>
+          {installer && !installer.active && (
+            <p className="mt-2 inline-flex rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900">
+              Profile pending EPRA and directory review. Customers cannot match with it yet.
+            </p>
+          )}
         </div>
 
         {/* Company Switcher */}
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowRegistrationModal(true)}
+            className="px-3 py-2 bg-accent hover:bg-amber-500 text-slate-950 text-xs font-bold rounded-xl transition-colors"
+          >
+            Register company
+          </button>
           <label htmlFor="company-select" className="text-xs font-bold text-textSecondary whitespace-nowrap">
             Switch Company:
           </label>
@@ -262,95 +328,35 @@ export default function InstallerDashboardPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-textSecondary mb-1">Company Name</label>
-                    <input
-                      type="text"
-                      value={installer.name}
-                      onChange={(e) => setInstaller({ ...installer, name: e.target.value })}
-                      required
-                      className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
+                    <input type="text" value={installer.name} onChange={(e) => setInstaller({ ...installer, name: e.target.value })} required className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" />
                   </div>
-
                   <div>
                     <label className="block text-xs font-bold text-textSecondary mb-1">EPRA License Number</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={installer.epra_license_no || ''}
-                        onChange={(e) => setInstaller({ ...installer, epra_license_no: e.target.value })}
-                        placeholder="e.g. EPRA/SOL/2023/0481"
-                        className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
-                      />
-                      <span className="absolute right-3 top-2.5 text-xs font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded">
-                        Class V1
-                      </span>
-                    </div>
+                    <input type="text" value={installer.epra_license_no || ''} onChange={(e) => setInstaller({ ...installer, epra_license_no: e.target.value })} placeholder="e.g. EPRA/SOL/2023/0481" className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" />
                   </div>
-
                   <div>
                     <label className="block text-xs font-bold text-textSecondary mb-1">Primary Phone</label>
-                    <input
-                      type="text"
-                      value={installer.phone || ''}
-                      onChange={(e) => setInstaller({ ...installer, phone: e.target.value })}
-                      placeholder="+254711234567"
-                      className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
+                    <input type="text" value={installer.phone || ''} onChange={(e) => setInstaller({ ...installer, phone: e.target.value })} className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" />
                   </div>
-
                   <div>
-                    <label className="block text-xs font-bold text-textSecondary mb-1">WhatsApp Forwarding Number</label>
-                    <input
-                      type="text"
-                      value={installer.whatsapp || ''}
-                      onChange={(e) => setInstaller({ ...installer, whatsapp: e.target.value })}
-                      placeholder="254711234567"
-                      className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
+                    <label className="block text-xs font-bold text-textSecondary mb-1">WhatsApp Number</label>
+                    <input type="text" value={installer.whatsapp || ''} onChange={(e) => setInstaller({ ...installer, whatsapp: e.target.value })} placeholder="254711234567" className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" />
                   </div>
-
                   <div>
                     <label className="block text-xs font-bold text-textSecondary mb-1">Base County</label>
-                    <input
-                      type="text"
-                      value={installer.county || ''}
-                      onChange={(e) => setInstaller({ ...installer, county: e.target.value })}
-                      placeholder="Nairobi"
-                      className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
+                    <input type="text" value={installer.county || ''} onChange={(e) => setInstaller({ ...installer, county: e.target.value })} placeholder="Nairobi" className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" />
                   </div>
-
                   <div>
                     <label className="block text-xs font-bold text-textSecondary mb-1">Base Town / Estate</label>
-                    <input
-                      type="text"
-                      value={installer.town || ''}
-                      onChange={(e) => setInstaller({ ...installer, town: e.target.value })}
-                      placeholder="Westlands"
-                      className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
+                    <input type="text" value={installer.town || ''} onChange={(e) => setInstaller({ ...installer, town: e.target.value })} placeholder="Westlands" className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" />
                   </div>
-
                   <div>
                     <label className="block text-xs font-bold text-textSecondary mb-1">Service Radius (km)</label>
-                    <input
-                      type="number"
-                      value={installer.service_radius_km}
-                      onChange={(e) => setInstaller({ ...installer, service_radius_km: Number(e.target.value) })}
-                      min={10}
-                      max={300}
-                      className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
+                    <input type="number" value={installer.service_radius_km} onChange={(e) => setInstaller({ ...installer, service_radius_km: Number(e.target.value) })} min={10} max={300} className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" />
                   </div>
-
                   <div>
                     <label className="block text-xs font-bold text-textSecondary mb-1">Installations Completed</label>
-                    <input
-                      type="number"
-                      value={installer.projects_completed || 100}
-                      onChange={(e) => setInstaller({ ...installer, projects_completed: Number(e.target.value) })}
-                      className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
+                    <input type="number" value={installer.projects_completed || 100} onChange={(e) => setInstaller({ ...installer, projects_completed: Number(e.target.value) })} className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" />
                   </div>
                 </div>
 
@@ -371,10 +377,11 @@ export default function InstallerDashboardPage() {
                     id="epra_verified"
                     checked={installer.epra_verified}
                     onChange={(e) => setInstaller({ ...installer, epra_verified: e.target.checked })}
+                    disabled={!installer.active}
                     className="w-4 h-4 text-primary rounded border-border focus:ring-primary"
                   />
                   <label htmlFor="epra_verified" className="text-xs font-bold text-textPrimary cursor-pointer">
-                    Display Verified EPRA Badge on Customer Reports
+                    {installer.active ? 'Display Verified EPRA Badge on Customer Reports' : 'EPRA verification is completed during profile review'}
                   </label>
                 </div>
               </div>
@@ -484,41 +491,27 @@ export default function InstallerDashboardPage() {
 
                 <div className="space-y-4">
                   {(installer.workflow_steps || []).map((step, idx) => (
-                    <div
-                      key={step.step}
-                      className="p-4 bg-background rounded-xl border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                    >
+                    <div key={step.step} className="p-4 bg-background rounded-xl border border-border space-y-3">
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-800 font-extrabold flex items-center justify-center text-xs flex-shrink-0">
-                          {idx + 1}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-sm text-textPrimary">{step.title}</h4>
-                          <p className="text-xs text-textSecondary mt-0.5 leading-relaxed">{step.description}</p>
-                          {step.required_from_customer && (
-                            <p className="text-[11px] text-amber-700 font-semibold mt-1">
-                              Required from client: {step.required_from_customer}
-                            </p>
-                          )}
+                        <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-800 font-extrabold flex items-center justify-center text-xs flex-shrink-0">{idx + 1}</div>
+                        <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+                          <input aria-label={`Step ${idx + 1} title`} value={step.title} onChange={(e) => updateWorkflowStep(idx, { title: e.target.value })} placeholder="Step title" className="text-sm font-semibold px-3 py-2 bg-surface border border-border rounded-lg" />
+                          <input aria-label={`Step ${idx + 1} duration`} value={step.duration} onChange={(e) => updateWorkflowStep(idx, { duration: e.target.value })} placeholder="Typical duration" className="text-sm px-3 py-2 bg-surface border border-border rounded-lg" />
+                          <textarea aria-label={`Step ${idx + 1} description`} rows={2} value={step.description} onChange={(e) => updateWorkflowStep(idx, { description: e.target.value })} placeholder="Describe system sizing, planning, field visits, permits, installation, or handover." className="sm:col-span-2 text-sm px-3 py-2 bg-surface border border-border rounded-lg" />
+                          <input aria-label={`Step ${idx + 1} customer preparation`} value={step.required_from_customer || ''} onChange={(e) => updateWorkflowStep(idx, { required_from_customer: e.target.value })} placeholder="What the customer needs to provide" className="sm:col-span-2 text-sm px-3 py-2 bg-surface border border-border rounded-lg" />
                         </div>
                       </div>
-                      <span className="text-xs font-bold text-textSecondary bg-surface px-3 py-1 rounded-full border border-border whitespace-nowrap self-start sm:self-center">
-                        ⏳ {step.duration}
-                      </span>
+                      <div className="flex justify-end">
+                        <button type="button" onClick={() => removeWorkflowStep(idx)} className="text-xs font-bold text-rose-700 hover:text-rose-900">Remove step</button>
+                      </div>
                     </div>
                   ))}
+                  <button type="button" onClick={addWorkflowStep} className="px-4 py-2 bg-surface border border-border rounded-lg text-xs font-bold text-primary hover:border-primary">+ Add process step</button>
                 </div>
 
                 <div className="pt-4 border-t border-border">
                   <h3 className="font-bold text-sm text-textPrimary mb-2">What Customers Must Prepare Before Site Visit:</h3>
-                  <div className="space-y-2">
-                    {(installer.customer_requirements || []).map((req, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-textSecondary">
-                        <span className="text-teal-600 font-bold">✓</span>
-                        <span>{req}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <textarea aria-label="Customer preparation checklist" rows={4} value={(installer.customer_requirements || []).join('\n')} onChange={(e) => setInstaller({ ...installer, customer_requirements: e.target.value.split('\n').map((item) => item.trim()).filter(Boolean) })} placeholder="Add one preparation item per line, such as a recent power bill or roof access details." className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-xl" />
                 </div>
               </div>
 
@@ -611,6 +604,33 @@ export default function InstallerDashboardPage() {
             </div>
           )}
         </form>
+      )}
+
+      {showRegistrationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-surface w-full max-w-xl rounded-2xl p-6 border border-border shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h2 className="font-bold text-lg text-textPrimary">Register an installer company</h2>
+              <button type="button" onClick={() => setShowRegistrationModal(false)} aria-label="Close registration" className="px-2 py-1 text-textSecondary hover:text-textPrimary">✕</button>
+            </div>
+            <p className="text-xs text-textSecondary">Profiles are reviewed before they appear in customer matches. You can add products and your installation process after submitting.</p>
+            <form onSubmit={handleRegisterCompany} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input required aria-label="Company name" placeholder="Company name" value={registration.name} onChange={(e) => setRegistration({ ...registration, name: e.target.value })} className="text-sm px-3 py-2.5 bg-background border border-border rounded-lg" />
+              <input required aria-label="Phone number" type="tel" placeholder="Phone number" value={registration.phone} onChange={(e) => setRegistration({ ...registration, phone: e.target.value })} className="text-sm px-3 py-2.5 bg-background border border-border rounded-lg" />
+              <input required aria-label="County" placeholder="County" value={registration.county} onChange={(e) => setRegistration({ ...registration, county: e.target.value })} className="text-sm px-3 py-2.5 bg-background border border-border rounded-lg" />
+              <input required aria-label="Town or service area" placeholder="Town or service area" value={registration.town} onChange={(e) => setRegistration({ ...registration, town: e.target.value })} className="text-sm px-3 py-2.5 bg-background border border-border rounded-lg" />
+              <input required aria-label="EPRA license number" placeholder="EPRA license number" value={registration.epra_license_no} onChange={(e) => setRegistration({ ...registration, epra_license_no: e.target.value })} className="text-sm px-3 py-2.5 bg-background border border-border rounded-lg" />
+              <label className="text-xs font-semibold text-textSecondary">Service radius (km)
+                <input required type="number" min={10} max={300} value={registration.service_radius_km} onChange={(e) => setRegistration({ ...registration, service_radius_km: Number(e.target.value) })} className="mt-1 w-full text-sm px-3 py-2.5 bg-background border border-border rounded-lg" />
+              </label>
+              <textarea aria-label="Company introduction" rows={3} placeholder="Company introduction and services" value={registration.bio} onChange={(e) => setRegistration({ ...registration, bio: e.target.value })} className="sm:col-span-2 text-sm px-3 py-2.5 bg-background border border-border rounded-lg" />
+              <div className="sm:col-span-2 flex justify-end gap-2">
+                <button type="button" onClick={() => setShowRegistrationModal(false)} className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg text-xs">Cancel</button>
+                <button type="submit" disabled={saving} className="px-4 py-2 bg-primary text-white font-bold rounded-lg text-xs disabled:opacity-50">{saving ? 'Submitting...' : 'Submit company profile'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* ── Add Product Modal ── */}

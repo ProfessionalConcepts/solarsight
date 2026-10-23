@@ -380,6 +380,29 @@ export function getInstallerById(id: number): AdminInstaller | null {
   return globalData.__solarsight_installers!.find((i) => i.id === id) || null
 }
 
+export function createInstallerProfile(
+  details: Pick<AdminInstaller, 'name' | 'phone' | 'county' | 'town' | 'epra_license_no' | 'service_radius_km' | 'bio'>
+): AdminInstaller {
+  const installers = getInstallers()
+  const id = installers.length ? Math.max(...installers.map((installer) => installer.id)) + 1 : 1
+  const installer: AdminInstaller = {
+    id,
+    ...details,
+    whatsapp: details.phone,
+    epra_verified: false,
+    product_types: ['pv_hybrid', 'pv_gridtie'],
+    size_min_kw: 0.5,
+    size_max_kw: 20,
+    lead_fee_ksh: 0,
+    active: false,
+    products: [],
+    workflow_steps: [...DEFAULT_WORKFLOW_STEPS],
+    customer_requirements: [],
+  }
+  installers.unshift(installer)
+  return installer
+}
+
 export function updateInstaller(id: number, updates: Partial<AdminInstaller>): AdminInstaller | null {
   const installers = getInstallers()
   const idx = installers.findIndex((i) => i.id === id)

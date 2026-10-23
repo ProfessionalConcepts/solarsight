@@ -209,6 +209,15 @@ export async function getInstallerProfile(id: number): Promise<AdminInstaller> {
   return apiFetch(`/installers/${id}`)
 }
 
+export async function registerInstallerProfile(
+  data: Pick<AdminInstaller, 'name' | 'phone' | 'county' | 'town' | 'epra_license_no' | 'service_radius_km' | 'bio'>
+): Promise<{ success: boolean; installer: AdminInstaller }> {
+  return apiFetch('/installers', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
 export async function updateInstallerProfile(
   id: number,
   data: Partial<AdminInstaller>
@@ -222,9 +231,11 @@ export async function updateInstallerProfile(
 // ─── Customer Project & Installation Tracker ───────────────────────────────
 
 export async function getProjectTracker(
-  assessmentId: string
+  assessmentId: string,
+  installerId?: number
 ): Promise<{ tracker: any; assessment: AssessmentReport | null }> {
-  return apiFetch(`/project/${assessmentId}`)
+  const query = installerId ? `?installer=${installerId}` : ''
+  return apiFetch(`/project/${assessmentId}${query}`)
 }
 
 export async function updateProjectTracker(
